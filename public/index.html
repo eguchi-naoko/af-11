@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <title>Firebase Authentication sample 02</title>
+  <script src="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.js"></script>
+  <link href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+  <h1>Firebase Authenction Sample 02</h1>
+  <div id="auth"></div>
+  <script src="/__/firebase/7.16.0/firebase-app.js"></script>
+  <script src="/__/firebase/7.16.0/firebase-auth.js"></script>
+  <script src="/__/firebase/7.16.0/firebase-firestore.js"></script>
+  <script src="/__/firebase/init.js"></script>
+  <script type="text/javascript">
+
+
+    /*
+    function inputChange(event){
+      msg.innerText = 'お名前は' + nameText.value + 'さんですね';
+    }
+
+    let nameText = document.getElementById('nameText');
+    nameText.addEventListener('change', inputChange);
+    let msg = document.getElementById('msg');
+    */
+
+    /*
+    Firebase Authentcation を使った認証サンプル 02
+    Google認証用のオブジェクトを生成
+    認証用の関数「signIn」を定義
+    サインアウト 用の関数「signOut」を定義
+    認証の状態をチェックして、「サインイン」「サインアウト 」のボタンを出し分ける
+    */
+    const db = firebase.firestore();
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    function myFunction(uid,inputValue1,inputValue2) {
+      document.getElementById("output").textContent = "uid: " + uid + "name: " + inputValue1 + " tele: "+inputValue2;
+      db.collection("users").doc(uid).update({
+        name: inputValue1,
+        tele: inputValue2
+      })
+        .then(() => {
+          console.log("Document successfully written!");
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+    }
+
+    function handleClick(uid) {
+      const inputValue1 = document.getElementById("nameInput").value;
+      const inputValue2 = document.getElementById("teleInput").value;
+      myFunction(uid,inputValue1,inputValue2);
+    }
+
+    function addData(uid, email) {
+      // Add a new document in collection "users"
+      db.collection("users").doc(uid).set({
+        email: email,
+        state: "Tokyo1",
+        country: "JP"
+      })
+        .then(() => {
+          console.log("Document successfully written!");
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+
+
+    }
+
+    function signIn() {
+      firebase.auth().signInWithPopup(provider)
+        .then(result => {
+          console.log('ログインしました。');
+
+        }).catch(error => {
+          const signinError = `
+        サインインエラー
+        エラーメッセージ： ${error.message}
+        エラーコード: ${error.code}
+        `
+          console.log(signinError);
+        });
+    }
+
+    function signOut() {
+      firebase.auth().onAuthStateChanged(user => {
+        firebase
+          .auth()
+          .signOut()
+          .then(() => {
+            console.log('ログアウトしました');
+            location.reload();
+          })
+          .catch((error) => {
+            console.log(`ログアウト時にエラーが発生しました (${error})`);
+          });
+      });
+    }
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        const signOutMessage = `
+        <p>ver: 115<\/p>
+        <p>Hello, ${user.displayName}!<\/p>
+        <p>uid: ${user.uid}!<\/p>
+        <button class="btn btn-primary" type="submit"  onClick="signOut()">サインアウト<\/button>
+        <button class="btn btn-primary" type="submit"  onClick='addData("${user.uid}","${user.email}")'>Add Data<\/button>
+        <p>Name: <input type="text" id="nameInput"><\/p>
+        <p>Telephone: <input type="text" id="teleInput"><\/p>
+        <button onclick='handleClick("${user.uid}")'>送信</button>
+        <div id="output"></div>
+        `;
+        document.getElementById('auth').innerHTML = signOutMessage;
+        console.log('ログインしています');
+
+      } else {
+        const signInMessage = `
+          <button class="btn btn-primary" type="submit"  onClick="signIn()">サインイン<\/button>
+          `;
+        document.getElementById('auth').innerHTML = signInMessage;
+      }
+    });
+
+  </script>
+</body>
+
+</html>
